@@ -1,0 +1,109 @@
+/*
+ * Core styles served to all browsers.
+ *
+ * This file is based on normalize.css, see the link for details.
+ *
+ * v3.0.3 | MIT License | github.com/necolas/normalize.css
+ */
+
+/*
+ * Document Level
+ */
+
+html {
+	text-size-adjust: $hundred;
+}
+
+body {
+	margin: 0 auto;
+	font-size: $baseFontSize;
+}
+
+
+
+
+/*
+ * HTML5
+ */
+
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+main,
+nav,
+section,
+summary {
+	display: block;
+}
+
+[hidden],
+template {
+	display: none;
+}
+
+
+
+
+/*
+ * Links
+ */
+
+a {
+	color: $color3;
+	text-decoration: none;
+
+	&:hover,
+	&:active,
+	&:visited {
+		color: darken($color3, 15%);
+	}
+}
+
+
+
+
+/*
+ * Forms
+ */
+
+button,
+input,
+optgroup,
+select,
+textarea {
+	color: inherit;
+	font: inherit;
+	margin: 0;
+}
+
+button {
+	overflow: visible;
+}
+
+button,
+select {
+	text-transform: none;
+}
+
+button,
+html input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+	-webkit-appearance: button;
+	cursor: pointer;
+}
+
+button[disabled],
+html input[dispabled] {
+	cursor: default;
+}
+
+button:-moz-focus-inner,
+input:-moz-focus-inner {
+	border: 0;
+	padding: 0;
+}

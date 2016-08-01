@@ -1,0 +1,18 @@
+/*
+ * Adds modern css core styles on top of the foundation styles.
+ */
+
+
+/*
+ * HTML5
+ */
+
+html {
+	box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+	box-sizing: inherit;
+}
