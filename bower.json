@@ -3,6 +3,9 @@
   "description": "Installs all browser side JavaScript dependencies unique to this sharepointbuild2013 build.",
   "main": "index.html",
   "dependencies": {
-    "jquery-3.1.0.min": "https://code.jquery.com/jquery-3.1.0.min.js"
+    "jquery": "^3.1.0"
+  },
+  "install": {
+    "path": "Branding/libraries"
   }
 }

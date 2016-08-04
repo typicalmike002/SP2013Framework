@@ -1,9 +1,11 @@
 {
   "name": "SP2013Framework",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "A framework for building customized SharePoint branding solutions.",
   "devDependencies": {
     "autoprefixer": "^6.3.6",
+    "bower": "^1.7.9",
+    "bower-installer": "^1.2.0",
     "css-mqpacker": "^5.0.1",
     "cssnano": "^3.7.1",
     "gulp": "^3.9.1",
@@ -25,4 +27,3 @@
     "webpack": "^1.13.1"
   }
 }
-
