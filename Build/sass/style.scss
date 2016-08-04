@@ -1,9 +1,9 @@
 
 @import 'global/variables';
-@import 'foundation/foundation';
+@import 'foundation/basic';
 @import 'layout/grid';
 
 @media all {
-    @import 'enhanced/enhanced';
+    @import 'foundation/enhanced';
 }
 
