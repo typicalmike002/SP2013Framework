@@ -1,11 +1,11 @@
 {
-	"username"	: "USERNAME",
-	"password" 	: "PASSWORD",
-	"siteUrl" 	: "SITEURL",
-	"dir" 		: {
-		"masterpage": "/_catalogs/masterpage/",
-		"branding"	: "/_catalogs/masterpage/Branding/",
-		"webparts"	: "/SiteAssets/Webparts/",
+    "username"  : "USERNAME",
+    "password"  : "PASSWORD",
+    "siteUrl"   : "SITEURL",
+    "dir"       : {
+        "masterpage": "/_catalogs/masterpage/",
+        "branding"  : "/_catalogs/masterpage/Branding/",
+        "webparts"  : "/SiteAssets/Webparts/",
         "config"    : "/_catalogs/masterpage/Local Configuration"
-	}
+    }
 }
