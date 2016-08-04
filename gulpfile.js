@@ -149,7 +149,7 @@ gulp.task('js', function(){
  */
 
 gulp.task('brandCSS', ['css'], function(){
-    return gulp.src('./Branding/**/*.{css}')
+    return gulp.src('./Branding/**/*.css')
 
         // Logs any connection errors to the console:
         .pipe(plumber({
