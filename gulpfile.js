@@ -60,7 +60,7 @@ gulp.task('watch', function(){
         '!sharepoint.config.json',
         '*.{js,json,stylelintrc,rb,.gitignore}',
         'Build/**/*.{ts,scss}'
-    ], ['push:config']);
+    ], ['push:source']);
 
     // Displays a message to the developer that indicates gulp is ready:
     console.log('SharePointBuild2013 now waiting for changes...');
