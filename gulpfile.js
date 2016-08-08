@@ -5,7 +5,7 @@
  */
 
 var gulp    = require('gulp'),
-    sp      = require('./example.sharepoint.config.json'),
+    sp      = require('./sharepoint.config.json'),
     onError = function (err){
     console.log(err);
     this.emit('end');
@@ -54,6 +54,13 @@ gulp.task('watch', function(){
 
     // Watch webparts:
     gulp.watch('Build/html/webparts/*.html', ['push:webparts']);
+
+    // Watch source code:
+    gulp.watch([
+        '!sharepoint.config.json',
+        '*.{js,json,stylelintrc,rb,.gitignore}',
+        'Build/**/*.{ts,scss}'
+    ], ['push:config']);
 
     // Displays a message to the developer that indicates gulp is ready:
     console.log('SharePointBuild2013 now waiting for changes...');
@@ -148,7 +155,7 @@ gulp.task('compile:js', function(){
  * - Pushes all css files content to the branding folder.
  */
 
-gulp.task('push:css', ['css'], function(){
+gulp.task('push:css', ['compile:css'], function(){
     return gulp.src('./Branding/**/*.css')
 
         // Logs any connection errors to the console:
@@ -174,7 +181,7 @@ gulp.task('push:css', ['css'], function(){
  * - Pushes all javascript files to the branding folder.
  */
 
-gulp.task('push:js', ['js'], function(){
+gulp.task('push:js', ['compile:js'], function(){
     return gulp.src('./Branding/**/*.{js,map}')
 
         // Logs any connection errors to the console:
@@ -190,7 +197,7 @@ gulp.task('push:js', ['js'], function(){
             folder      : sp.dir.branding,
             flatten     : false
         }))
-})
+});
 
 
 
@@ -217,7 +224,8 @@ gulp.task('push:misc', function(){
             folder      : sp.dir.branding,
             flatten     : false
         }))
-})
+});
+
 
 
 
@@ -286,7 +294,7 @@ gulp.task('push:masterpage', function(){
  *   security reasons.
  */
 
-gulp.task('push:config', function(){
+gulp.task('push:source', function(){
     return gulp.src([
         '!sharepoint.config.json',
         '*.{js,json,stylelintrc,rb,.gitignore}',
@@ -318,4 +326,4 @@ gulp.task('push:config', function(){
  *   the functionality of all tasks.
  */
 
-gulp.task('sharepoint', ['push:css', 'push:js', 'push:webparts', 'push:misc', 'push:masterpage', 'push:config']);
+gulp.task('sharepoint', ['push:css', 'push:js', 'push:webparts', 'push:misc', 'push:masterpage', 'push:source']);
