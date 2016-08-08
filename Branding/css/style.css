@@ -102,6 +102,10 @@ input:-moz-focus-inner {
   padding: 1em;
 }
 
+/**
+ * An example file of where to put css for a custom webpart.
+ */
+
 @media screen and (min-width: 40em) {
   .main_container {
     max-width: 40em;

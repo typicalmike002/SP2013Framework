@@ -5,7 +5,7 @@
  */
 
 var gulp    = require('gulp'),
-    sp      = require('./sharepoint.config.json'),
+    sp      = require('./example.sharepoint.config.json'),
     onError = function (err){
     console.log(err);
     this.emit('end');
@@ -41,19 +41,19 @@ require('matchdep').filterDev('gulp*').forEach(function( module ) {
 gulp.task('watch', function(){
 
     // Watch css:
-    gulp.watch('Build/sass/**/*.scss', ['brandCSS']);
+    gulp.watch('Build/sass/**/*.scss', ['push:css']);
 
     // Watch js:
-    gulp.watch('Build/ts/**/*.ts', ['brandJS']);
+    gulp.watch('Build/ts/**/*.ts', ['push:js']);
 
     // Watch Misc Files:
-    gulp.watch('Banding/**/*.{png,jpg,gif,svg,eto,ttf,eot,woff}', ['brandMisc']);
+    gulp.watch('Banding/**/*.{png,jpg,gif,svg,eto,ttf,eot,woff}', ['push:misc']);
 
     // Watch masterpage: 
-    gulp.watch('Build/*.html', ['masterpage']);
+    gulp.watch('Build/html/*.html', ['push:masterpage']);
 
     // Watch webparts:
-    gulp.watch('Build/webparts/*.html', ['webparts']);
+    gulp.watch('Build/html/webparts/*.html', ['push:webparts']);
 
     // Displays a message to the developer that indicates gulp is ready:
     console.log('SharePointBuild2013 now waiting for changes...');
@@ -69,7 +69,7 @@ gulp.task('watch', function(){
  *   a minified version to the Build folder.
  */
 
-gulp.task('css', function(){
+gulp.task('compile:css', function(){
     return gulp.src('./Build/sass/**/*.scss')
         
         // Stylelint scss files:
@@ -123,7 +123,7 @@ gulp.task('css', function(){
  * - See the ./webpack.config.js file to view JavaScript Compiling options. 
  */
 
-gulp.task('js', function(){
+gulp.task('compile:js', function(){
     return gulp.src('./Build/ts/*.ts')
 
         // Lint TypeScript:
@@ -148,7 +148,7 @@ gulp.task('js', function(){
  * - Pushes all css files content to the branding folder.
  */
 
-gulp.task('brandCSS', ['css'], function(){
+gulp.task('push:css', ['css'], function(){
     return gulp.src('./Branding/**/*.css')
 
         // Logs any connection errors to the console:
@@ -174,7 +174,7 @@ gulp.task('brandCSS', ['css'], function(){
  * - Pushes all javascript files to the branding folder.
  */
 
-gulp.task('brandJS', ['js'], function(){
+gulp.task('push:js', ['js'], function(){
     return gulp.src('./Branding/**/*.{js,map}')
 
         // Logs any connection errors to the console:
@@ -201,7 +201,7 @@ gulp.task('brandJS', ['js'], function(){
  * - Pushes all other file changes to the branding folder.
  */
 
-gulp.task('brandMisc', function(){
+gulp.task('push:misc', function(){
     return gulp.src('./Branding/**/*.{png,jpg,gif,svg,eto,ttf,eot,woff}')
 
         // Logs any connection errors to the console:
@@ -227,8 +227,8 @@ gulp.task('brandMisc', function(){
  * - Pushes masterpage and page layouts to the sharepoint site.
  */
 
-gulp.task('masterpage', function(){
-    return gulp.src('./Build/*.html')
+gulp.task('push:masterpage', function(){
+    return gulp.src('./Build/html/*.html')
 
         // Logs any connection errors to the console:
         .pipe(plumber({
@@ -254,8 +254,8 @@ gulp.task('masterpage', function(){
  * - Pushes masterpage and page layouts to the sharepoint site.
  */
 
- gulp.task('webparts', function(){
-    return gulp.src('./Build/Webparts/**/*.html')
+ gulp.task('push:webparts', function(){
+    return gulp.src('./Build/html/webparts/**/*.html')
 
         // Logs any connection errors to the console:
         .pipe(plumber({
@@ -286,10 +286,10 @@ gulp.task('masterpage', function(){
  *   security reasons.
  */
 
-gulp.task('config', function(){
+gulp.task('push:config', function(){
     return gulp.src([
         '!sharepoint.config.json',
-        '*.{js,json,stylelintrc,bowerrc,rb}',
+        '*.{js,json,stylelintrc,rb,.gitignore}',
         'Build/**/*.{ts,scss}'
     ])
 
@@ -318,4 +318,4 @@ gulp.task('config', function(){
  *   the functionality of all tasks.
  */
 
-gulp.task('sharepoint', ['brandCSS', 'brandJS', 'webparts', 'masterpage', 'config']);
+gulp.task('sharepoint', ['push:css', 'push:js', 'push:webparts', 'push:misc', 'push:masterpage', 'push:config']);

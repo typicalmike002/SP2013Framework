@@ -6,6 +6,6 @@
         "masterpage": "/_catalogs/masterpage/",
         "branding"  : "/_catalogs/masterpage/Branding/",
         "webparts"  : "/SiteAssets/Webparts/",
-        "config"    : "/_catalogs/masterpage/Local Configuration"
+        "config"    : "/_catalogs/masterpage/Branding/configuration"
     }
 }
