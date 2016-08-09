@@ -4,7 +4,7 @@
     "siteUrl"   : "SITEURL",
     "dir"       : {
         "masterpage": "/_catalogs/masterpage/",
-        "branding"  : "/SiteAssets/",
+        "branding"  : "/_catalogs/masterpage/Branding",
         "webparts"  : "/SiteAssets/webparts/",
         "config"    : "/SiteAssets/source"
     }
