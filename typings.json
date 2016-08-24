@@ -4,6 +4,7 @@
   "globalDependencies": {
     "jquery": "registry:dt/jquery#1.10.0+20160704162008",
     "microsoft.ajax": "registry:dt/microsoft.ajax#0.0.0+20160706234802",
-    "sharepoint": "registry:dt/sharepoint#0.0.0+20160602140352"
+    "sharepoint": "registry:dt/sharepoint#0.0.0+20160602140352",
+    "spServices": "https://raw.githubusercontent.com/typicalmike002/SPServices/master/dist/jquery.SPServices.d.ts"
   }
 }

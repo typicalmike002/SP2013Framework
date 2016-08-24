@@ -58,8 +58,7 @@ gulp.task('watch', function(){
     // Watch source code:
     gulp.watch([
         '!sharepoint.config.json',
-        '*.{js,json,stylelintrc,rb,.gitignore}',
-        'Build/**/*.{ts,scss}'
+        '*.{js,json,stylelintrc,rb,.gitignore}'
     ], ['push:source']);
 
     // Displays a message to the developer that indicates gulp is ready:
@@ -131,13 +130,17 @@ gulp.task('compile:css', function(){
  */
 
 gulp.task('compile:js', function(){
-    return gulp.src('./Build/ts/*.ts')
+    return gulp.src('./Build/ts/**/*.ts')
 
         // Lint TypeScript:
         .pipe(tslint())
 
         // Prints tslint results to the console:
-        .pipe(tslint.report('verbose'))
+        .pipe(tslint.report('verbose'), {
+            emitError: false
+        })
+
+        .on('error', function(){})
 
         // Executes the webpack javascript module builder:
         .pipe(webpack(require('./webpack.config.js')))

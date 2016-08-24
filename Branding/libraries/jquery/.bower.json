@@ -1,0 +1,13 @@
+{
+  "name": "jquery-3.1.0.min",
+  "_cacheHeaders": {
+    "ETag": "W/\"577ecd90-1514f\"",
+    "Last-Modified": "Thu, 07 Jul 2016 21:45:52 GMT",
+    "Content-Type": "application/javascript; charset=utf-8"
+  },
+  "_release": "e-tag:W/\"577ecd9",
+  "main": "index.js",
+  "_source": "https://code.jquery.com/jquery-3.1.0.min.js",
+  "_target": "*",
+  "_originalSource": "https://code.jquery.com/jquery-3.1.0.min.js"
+}
