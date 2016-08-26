@@ -17,7 +17,7 @@ module.exports = {
                 if ( /webparts/.test(path.basename(page) ) ) {
                     fs.readdirSync(path.join(__dirname, '/Build/ts/webparts'))
                         .forEach(function (current){
-                            map[path.basename(current).replace(/\.ts$/, '')] = path.join(path.resolve('Build/ts/webparts'), current);
+                            map['/webparts/' + path.basename(current).replace(/\.ts$/, '')] = path.join(path.resolve('Build/ts/webparts'), current);
                         })
                 }
 
