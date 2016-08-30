@@ -5,11 +5,12 @@
  */
 
 var gulp    = require('gulp'),
+    path    = require('path'),
     sp      = require('./sharepoint.config.json'),
     onError = function (err){
-    console.log(err);
-    this.emit('end');
-};
+        console.log(err);
+        this.emit('end');
+    };
 
 
 
@@ -43,23 +44,29 @@ gulp.task('watch', function(){
     // Watch css:
     gulp.watch('Build/sass/**/*.scss', ['push:css']);
 
-    // Watch js:
-    gulp.watch('Build/ts/**/*.ts', ['push:js']);
+    // Watch for main js:
+    gulp.watch('Build/ts/*.ts', ['push:js']);
 
     // Watch Misc Files:
-    gulp.watch('Banding/**/*.{png,jpg,gif,svg,eto,ttf,eot,woff}', ['push:misc']);
+    gulp.watch('Banding/{images,fonts}/*.{png,jpg,gif,svg,eto,ttf,eot,woff}', ['push:misc']);
 
     // Watch masterpage: 
     gulp.watch('Build/html/*.html', ['push:masterpage']);
 
     // Watch webparts:
-    gulp.watch('Build/html/webparts/*.html', ['push:webparts']);
+    gulp.watch([
+        'Build/html/webparts/*.html',
+        'Build/ts/webparts/*.ts'
+    ], ['push:webparts']);
 
-    // Watch source code:
+    // Watch config code:
     gulp.watch([
         '!sharepoint.config.json',
         '*.{js,json,stylelintrc,rb,.gitignore}'
-    ], ['push:source']);
+    ], ['push:config']);
+
+    // Watch libraries:
+    gulp.watch('Branding/libraries/**/*.js', ['push:libraries']);
 
     // Displays a message to the developer that indicates gulp is ready:
     console.log('SharePointBuild2013 now waiting for changes...');
@@ -69,7 +76,7 @@ gulp.task('watch', function(){
 
 
 /**
- * Gulp's css task.
+ * Gulp's compile css task.
  *
  * - Lints and compiles all scss code to css and outputs an unminified and 
  *   a minified version to the Build folder.
@@ -101,6 +108,7 @@ gulp.task('compile:css', function(){
             require('css-mqpacker')
         ]))
 
+
         // Saves an unminified copy of the results:
         .pipe(gulp.dest('./Branding/css'))
 
@@ -122,7 +130,7 @@ gulp.task('compile:css', function(){
 
 
 /**
- * Gulp's js task.
+ * Gulp's compile js task.
  *
  * - Lints all TypeScript Files before running Webpack.
  *
@@ -140,6 +148,9 @@ gulp.task('compile:js', function(){
             emitError: false
         })
 
+        // This empty function allows gulp to continue the stream
+        // if tslint reports an error.  It is blank because we are 
+        // using tslint.report() above this message to log the errors:
         .on('error', function(){})
 
         // Executes the webpack javascript module builder:
@@ -153,13 +164,13 @@ gulp.task('compile:js', function(){
 
 
 /**
- * Gulp's brand css task.
+ * Gulp's push css task.
  *
  * - Pushes all css files content to the branding folder.
  */
 
-gulp.task('push:css', ['compile:css'], function(){
-    return gulp.src('./Branding/**/*.css')
+gulp.task('push:css', ['compile:css', 'push:sass'], function(){
+    return gulp.src('./Branding/css/*.css')
 
         // Logs any connection errors to the console:
         .pipe(plumber({
@@ -171,7 +182,7 @@ gulp.task('push:css', ['compile:css'], function(){
             username    : sp.username,
             password    : sp.password,
             siteUrl     : sp.siteUrl,
-            folder      : sp.dir.branding,
+            folder      : sp.dir.branding + '/css/',
             flatten     : false
         }))
 });
@@ -179,13 +190,13 @@ gulp.task('push:css', ['compile:css'], function(){
 
 
 /**
- * Gulp's brand javascript task.
+ * Gulp's push javascript task.
  *
  * - Pushes all javascript files to the branding folder.
  */
 
-gulp.task('push:js', ['compile:js'], function(){
-    return gulp.src('./Branding/**/*.{js,map}')
+gulp.task('push:js', ['compile:js', 'push:ts'], function(){
+    return gulp.src('./Branding/js/*.{js,map}')
 
         // Logs any connection errors to the console:
         .pipe(plumber({
@@ -197,7 +208,7 @@ gulp.task('push:js', ['compile:js'], function(){
             username    : sp.username,
             password    : sp.password,
             siteUrl     : sp.siteUrl,
-            folder      : sp.dir.branding,
+            folder      : sp.dir.branding + '/js/',
             flatten     : false
         }))
 });
@@ -206,13 +217,43 @@ gulp.task('push:js', ['compile:js'], function(){
 
 
 /**
- * Gulp's brand files task.
+ * Gulp's push libraries task.
+ *
+ * - Pushes all libraries to the branding folder.
+ */
+
+gulp.task('push:libraries', function(){
+
+    return gulp.src('./Branding/libraries/**/*.js')
+
+        // Logs any connection errors to the console:
+        .pipe(plumber({
+            errorHandler: onError
+        }))
+
+        // Pushes changes to the sharepoint site:
+        .pipe(spsave({
+            username    : sp.username,
+            password    : sp.password,
+            siteUrl     : sp.siteUrl,
+            folder      : sp.dir.branding + '/libraries/',
+            flatten     : false
+        }))
+});
+
+
+
+
+/**
+ * Gulp's push misc files task.
  *
  * - Pushes all other file changes to the branding folder.
+ *
+ * - Handles images, fonts, and other file formats.
  */
 
 gulp.task('push:misc', function(){
-    return gulp.src('./Branding/**/*.{png,jpg,gif,svg,eto,ttf,eot,woff}')
+    return gulp.src('./Branding/{images,fonts}/**/*.{png,jpg,gif,svg,eto,ttf,eot,woff}')
 
         // Logs any connection errors to the console:
         .pipe(plumber({
@@ -262,24 +303,36 @@ gulp.task('push:masterpage', function(){
 /**
  * Gulp's webpart task.
  *
- * - Pushes masterpage and page layouts to the sharepoint site.
+ * - Pushes webparts to the SiteAssets folder.
+ *
+ * - The folder will be determined by the file name.
+ *   Make sure the .js file name matches .html 
  */
 
- gulp.task('push:webparts', function(){
-    return gulp.src('./Build/html/webparts/**/*.html')
+ gulp.task('push:webparts', ['compile:js', 'push:ts'], function(){
+
+    return gulp.src([
+            './Build/html/webparts/**/*.html',
+            './Branding/js/webparts/*.{js,map}'
+        ])
 
         // Logs any connection errors to the console:
         .pipe(plumber({
             errorHandler: onError
         }))
 
-        // Pushes changes to the sharepoint site:
-        .pipe(spsave({
-            username    : sp.username,
-            password    : sp.password,
-            siteUrl     : sp.siteUrl,
-            folder      : sp.dir.webparts,
-            flatten     : false
+        // Each webpart will be saved to a folder that shares a name with 
+        // the name of the files without the extension.
+        .pipe(tap(function(file){
+            var webpartFolder = path.basename(file.path).replace(/\.(.*?)$/, '');
+            return gulp.src(file.path)
+                .pipe(spsave({
+                    username    : sp.username,
+                    password    : sp.password,
+                    siteUrl     : sp.siteUrl,
+                    folder      : sp.dir.webparts + '/' + webpartFolder,
+                    flatten     : false
+                }))
         }))
 });
 
@@ -289,19 +342,15 @@ gulp.task('push:masterpage', function(){
 /**
  * Gulp's config task.
  *
- * - Pushes all local configuration files to the sharepoint site.
+ * - Pushes all local configuration files to the SiteAssets folder.
  *
- * - This includes all typescript and SASS files in the build folder.
- *
- * - This does not inlcude the sharepoint.config.json file for 
- *   security reasons.
+ * - This does not inlcude the sharepoint.config.json 
  */
 
-gulp.task('push:source', function(){
+gulp.task('push:config', function(){
     return gulp.src([
         '!sharepoint.config.json',
-        '*.{js,json,stylelintrc,rb,.gitignore}',
-        'Build/**/*.{ts,scss}'
+        '*.{js,json,stylelintrc,rb,gitignore,bowerrc}',
     ])
 
     // Logs any connection errors to the console:
@@ -314,10 +363,65 @@ gulp.task('push:source', function(){
         username    : sp.username,
         password    : sp.password,
         siteUrl     : sp.siteUrl,
-        folder      : sp.dir.config,
+        folder      : sp.dir.branding + '/config/',
         flatten     : false
     }))
 });
+
+
+
+
+/**
+ * Gulp's push TS task.
+ *
+ * - Pushes all TS files to the SiteAssets folder.
+ */
+
+gulp.task('push:ts', function(){
+    return gulp.src(['Build/ts/**/*.ts'])
+
+    // Logs any connection errors to the console:
+    .pipe(plumber({
+        errorHandler: onError
+    }))
+
+    // Pushes changes to the sharepoint site:
+    .pipe(spsave({
+        username    : sp.username,
+        password    : sp.password,
+        siteUrl     : sp.siteUrl,
+        folder      : sp.dir.branding + '/js/ts/',
+        flatten     : false
+    }))
+});
+
+
+
+
+/**
+ * Gulp's push SASS task.
+ *
+ * - Pushes all SASS files to the SiteAssets folder.
+ */
+
+gulp.task('push:sass', function(){
+    return gulp.src(['Build/sass/**/*.scss'])
+
+    // Logs any connection errors to the console:
+    .pipe(plumber({
+        errorHandler: onError
+    }))
+
+    // Pushes changes to the sharepoint site:
+    .pipe(spsave({
+        username    : sp.username,
+        password    : sp.password,
+        siteUrl     : sp.siteUrl,
+        folder      : sp.dir.branding + '/css/sass/',
+        flatten     : false
+    }))
+});
+
 
 
 
@@ -329,4 +433,4 @@ gulp.task('push:source', function(){
  *   the functionality of all tasks.
  */
 
-gulp.task('sharepoint', ['push:css', 'push:js', 'push:webparts', 'push:misc', 'push:masterpage', 'push:source']);
+gulp.task('sharepoint', ['push:css', 'push:js', 'push:webparts', 'push:misc', 'push:masterpage', 'push:config']);

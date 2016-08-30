@@ -1,6 +1,6 @@
 {
   "name": "SP2013Framework",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A framework for building customized SharePoint branding solutions.",
   "devDependencies": {
     "autoprefixer": "^6.3.6",
