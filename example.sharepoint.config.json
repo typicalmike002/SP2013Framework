@@ -3,9 +3,10 @@
     "password"  : "PASSWORD",
     "siteUrl"   : "SITEURL",
     "dir"       : {
-        "masterpage": "/_catalogs/masterpage/",
-        "branding"  : "/_catalogs/masterpage/Branding",
-        "webparts"  : "/SiteAssets/webparts/",
-        "config"    : "/SiteAssets/source"
+        "collection": "sites/devEnvironment",
+        "masterpage": "_catalogs/masterpage",
+        "branding"  : "_catalogs/masterpage/Branding",
+        "webparts"  : "SiteAssets/webparts",
+        "config"    : "SiteAssets/source"
     }
 }

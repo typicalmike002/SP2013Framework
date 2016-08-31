@@ -7,6 +7,8 @@
 var gulp    = require('gulp'),
     path    = require('path'),
     sp      = require('./sharepoint.config.json'),
+    sppull  = require('sppull').sppull,
+    colors  = require('colors'),
     onError = function (err){
         console.log(err);
         this.emit('end');
@@ -425,7 +427,6 @@ gulp.task('push:sass', function(){
 
 
 
-
 /**
  * Gulp's Push to SharePoint task.
  *
@@ -433,4 +434,40 @@ gulp.task('push:sass', function(){
  *   the functionality of all tasks.
  */
 
-gulp.task('sharepoint', ['push:css', 'push:js', 'push:webparts', 'push:misc', 'push:masterpage', 'push:config']);
+gulp.task('push:sharepoint', ['push:css', 'push:js', 'push:webparts', 'push:misc', 'push:masterpage', 'push:config']);
+
+
+
+
+/**
+ * Gulp's Pull from SharePoint Tasks.
+ *
+ * - This section is in beta.
+ *
+ * - Due to a bug in the sppull module, we have to manually set the url path 
+ *   from within strictObjects to pull the custom.html masterpage.
+ */
+
+gulp.task('pull:masterpage', function(){
+
+    sppull({
+            username: sp.username,
+            password: sp.password,
+            siteUrl: sp.siteUrl
+        }, {
+            spRootFolder: sp.dir.masterpage,
+            dlRootFolder: './Build/html',
+            strictObjects: [
+                '/' + sp.dir.collection + '/' + sp.dir.masterpage + '/' + 'custom.html'
+            ]
+        }
+    ).then(function(file){
+        for (var i = 0, l = file.length; i < l; i++){
+        
+            // Tells the user which files have been downloaded, and where they have been saved:
+            console.log(file[i].ServerRelativeUrl.green + ' has been downloaded into ' + file[i].SavedToLocalPath.green);
+        }
+    }).catch(function(err){
+        console.log(err.red);
+    });
+});
