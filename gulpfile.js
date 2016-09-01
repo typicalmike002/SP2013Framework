@@ -9,6 +9,7 @@ var gulp    = require('gulp'),
     sp      = require('./sharepoint.config.json'),
     sppull  = require('sppull').sppull,
     colors  = require('colors'),
+    del     = require('del'),
     onError = function (err){
         console.log(err);
         this.emit('end');
@@ -440,34 +441,248 @@ gulp.task('push:sharepoint', ['push:css', 'push:js', 'push:webparts', 'push:misc
 
 
 /**
+ * Helper vars/functions for Gulp's pull tasks.
+ */
+
+var spPullCreds = {
+    username: sp.username,
+    password: sp.password,
+    siteUrl: sp.siteUrl
+};
+
+
+
+
+/**
  * Gulp's Pull from SharePoint Tasks.
  *
  * - This section is in beta.
- *
- * - Due to a bug in the sppull module, we have to manually set the url path 
- *   from within strictObjects to pull the custom.html masterpage.
  */
 
 gulp.task('pull:masterpage', function(){
 
-    sppull({
-            username: sp.username,
-            password: sp.password,
-            siteUrl: sp.siteUrl
-        }, {
+    sppull(spPullCreds, {
             spRootFolder: sp.dir.masterpage,
             dlRootFolder: './Build/html',
             strictObjects: [
-                '/' + sp.dir.collection + '/' + sp.dir.masterpage + '/' + 'custom.html'
+                '/custom.html'
             ]
         }
-    ).then(function(file){
-        for (var i = 0, l = file.length; i < l; i++){
-        
-            // Tells the user which files have been downloaded, and where they have been saved:
-            console.log(file[i].ServerRelativeUrl.green + ' has been downloaded into ' + file[i].SavedToLocalPath.green);
-        }
-    }).catch(function(err){
-        console.log(err.red);
-    });
+    ).then(onPullComplete)
+     .catch(onPullError);
 });
+
+
+
+
+/**
+ * Gulp's Pull webpart tasks.
+ *
+ * - This section is in beta.
+ */
+
+gulp.task('pull:webparts', function(){
+
+    sppull(spPullCreds, {
+        spRootFolder: sp.dir.webparts,
+        dlRootFolder: './webpartsTemp'
+    })
+    .then(function(files){ 
+
+        // Loops through each webpart file being downloaded:
+        for (var i = 0, l = files.length; i < l; i++){
+
+            // Lets the user know which files are being downloaded to where.
+            // Each file will be placed into a temporary folder:
+            console.log(files[i].ServerRelativeUrl.green + ' has been downloaded into ' + files[i].SavedToLocalPath.green);
+
+            // IIFE: Move the file out of the temporary folder based off of their extensions:
+            (function(localPath){
+
+                if (/\.html$/.test(localPath)) {
+                    return gulp.src(localPath)
+                        .pipe(gulp.dest('./Build/html/webparts', {overwrite: true}))
+                } else {
+                    return gulp.src(localPath)
+                        .pipe(gulp.dest('./Branding/js/webparts', {overwrite: true}))
+                }
+
+            }(files[i].SavedToLocalPath));
+        }
+        
+        // Removes the temporary folder:
+        del('./webpartsTemp');
+    })
+    .catch(onPullError);
+});
+
+
+
+
+/**
+ * Gulp's Pull css task.
+ *
+ * This section is in beta.
+ */
+
+gulp.task('pull:css', function(){
+
+    sppull(spPullCreds, {
+        spRootFolder: sp.dir.branding + '/css',
+        dlRootFolder: './cssTemp'
+    })
+    .then(function(files){
+
+        for (var i = 0, l = files.length; i < l; i++){
+
+            // Lets the user know which files are being downloaded to where.
+            // Each file will be placed into a temporary folder:
+            console.log(files[i].ServerRelativeUrl.green + ' has been downloaded into ' + files[i].SavedToLocalPath.green);
+
+            (function(localPath){
+
+                if (/\.css$/.test(localPath) || /\.map$/.test(localPath)) {
+                    return gulp.src(localPath)
+                        .pipe(gulp.dest('./Branding/css', {overwrite: true}))
+                
+                } else {
+
+                    // For sass files, the directories must be set explicitly for each of them:
+                    var sassDir = './Build' + localPath.replace(/\.\/cssTemp\//, '');
+                    return gulp.src(localPath)
+                        .pipe(gulp.dest(sassDir.substring(0, sassDir.lastIndexOf('/')), {overwrite: true}))
+                }
+
+            }(files[i].SavedToLocalPath));
+        }
+
+        // Removes the temporary folder:
+        del('./cssTemp');
+    })
+    .catch(onPullError)
+});
+
+
+
+/**
+ * Gulp's Pull JS task.
+ *
+ * - This section is in beta.
+ */
+
+gulp.task('pull:js', function(){
+
+    sppull(spPullCreds, {
+        spRootFolder: sp.dir.branding + '/js',
+        dlRootFolder: './jsTemp'
+    })
+    .then(function(files){
+
+        for (var i = 0, l = files.length; i < l; i++){
+
+            // Lets the user know which files are being downloaded to where.
+            // Each file will be placed into a temporary folder:
+            console.log(files[i].ServerRelativeUrl.green + ' has been downloaded into ' + files[i].SavedToLocalPath.green);
+
+            (function(localPath){
+
+                if (/\.js$/.test(localPath) || /\.map$/.test(localPath)) {
+                    return gulp.src(localPath)
+                        .pipe(gulp.dest('./Branding/js', {overwrite: true}))
+                } else {
+
+                    // For ts files, the directories must be set explicitly for each of them:
+                    var tsDir = './Build' + localPath.replace(/\.\/jsTemp\//, '');
+                    return gulp.src(localPath)
+                        .pipe(gulp.dest(tsDir.substring(0, tsDir.lastIndexOf('/')), {overwrite: true}))
+                }
+
+            }(files[i].SavedToLocalPath));
+        }
+
+        // Removes the temporary folder:
+        del('./jsTemp');
+    })
+    .catch(onPullError)
+});
+
+
+
+/**
+ * Gulp's Pull libraries task.
+ *
+ * - This section is still in beta.
+ */
+
+gulp.task('pull:libraries', function(){
+
+    sppull(spPullCreds, {
+        spRootFolder: sp.dir.branding + '/libraries',
+        dlRootFolder: './Branding/libraries'
+    })
+    .then(onPullComplete)
+    .catch(onPullError)
+});
+
+
+
+/**
+ * Gulp's Pull images task.
+ *
+ * - This section is still in beta.
+ */
+
+gulp.task('pull:images', function(){
+
+    sppull(spPullCreds, {
+        spRootFolder: sp.dir.branding + '/images',
+        dlRootFolder: './Branding/images'
+    })
+    .then(onPullComplete)
+    .catch(onPullError)
+});
+
+
+
+/**
+ * Gulp's Pull fonts task.
+ *
+ * - This section is still in beta.
+ */
+
+gulp.task('pull:fonts', function(){
+
+    sppull(spPullCreds, {
+        spRootFolder: sp.dir.branding + '/fonts',
+        dlRootFolder: './Branding/fonts'
+    })
+    .then(onPullComplete)
+    .catch(onPullError)
+});
+
+
+
+/**
+ * Gulp's Pull 
+ *
+ * - This section is still in beta.
+ */
+
+gulp.task('pull:config', function(){
+
+    // TODO: Pull config files down from the sharepoint site.
+});
+
+
+
+
+function onPullComplete(files){
+    // Tells the user which files have been downloaded, and where they have been saved:
+    for (var i = 0, l = files.length; i < l; i++){
+        console.log(files[i].ServerRelativeUrl.green + ' has been downloaded into ' + files[i].SavedToLocalPath.green);
+    }
+}
+
+function onPullError(err){
+    console.log(err.red);
+}
