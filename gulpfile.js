@@ -4,12 +4,12 @@
  * - Handles all build tool tasks.
  */
 
-var gulp    = require('gulp'),
-    path    = require('path'),
-    sp      = require('./sharepoint.config.json'),
-    sppull  = require('sppull').sppull,
-    colors  = require('colors'),
-    del     = require('del'),
+var gulp          = require('gulp'),
+    path          = require('path'),
+    sp            = require('./sharepoint.config.json'),
+    sppull        = require('sppull').sppull,
+    colors        = require('colors'),
+    del           = require('del'),
     onError = function (err){
         console.log(err);
         this.emit('end');
@@ -65,7 +65,7 @@ gulp.task('watch', function(){
     // Watch config code:
     gulp.watch([
         '!sharepoint.config.json',
-        '*.{js,json,stylelintrc,rb,.gitignore}'
+        '*.{rb,json}'
     ], ['push:config']);
 
     // Watch libraries:
@@ -348,12 +348,17 @@ gulp.task('push:masterpage', function(){
  * - Pushes all local configuration files to the SiteAssets folder.
  *
  * - This does not inlcude the sharepoint.config.json 
+ *
+ * - All .json files aren't being pulled from the site correctly,
+ *   to fix this, all config files will be converted to .xml
+ *   and will be converted back when pulled.
  */
 
 gulp.task('push:config', function(){
     return gulp.src([
-        '!sharepoint.config.json',
-        '*.{js,json,stylelintrc,rb,gitignore,bowerrc}',
+        'typings.json',
+        'bower.json',
+        'package.json'
     ])
 
     // Logs any connection errors to the console:
@@ -441,7 +446,9 @@ gulp.task('push:sharepoint', ['push:css', 'push:js', 'push:webparts', 'push:misc
 
 
 /**
- * Helper vars/functions for Gulp's pull tasks.
+ * Object: spPullCreds
+ *
+ * - Supplies login credentials to the sppull argument.
  */
 
 var spPullCreds = {
@@ -454,9 +461,29 @@ var spPullCreds = {
 
 
 /**
+ * Functions: onPullComplete(files), onPullError(err)
+ *
+ * - Default actions passed to sppull promise. 
+ */
+
+var onPullComplete = function(files){
+    // Tells the user which files have been downloaded, and where they have been saved:
+    for (var i = 0, l = files.length; i < l; i++){
+        console.log(files[i].ServerRelativeUrl.green + ' has been downloaded into ' + files[i].SavedToLocalPath.green);
+    }
+}
+
+var onPullError = function(err){
+    console.log(err.red);
+}
+
+
+
+
+/**
  * Gulp's Pull from SharePoint Tasks.
  *
- * - This section is in beta.
+ * - Pulls the custom.html masterpage from the sharepoint site.
  */
 
 gulp.task('pull:masterpage', function(){
@@ -478,7 +505,12 @@ gulp.task('pull:masterpage', function(){
 /**
  * Gulp's Pull webpart tasks.
  *
- * - This section is in beta.
+ * - Pulls webpart files from the SiteAssets folder on the
+ *   sharepoint site.  This includes the .html and .min.js
+ *   files for each of the webparts.
+ *
+ * - Downloads all files into a temp folder, the promise
+ *   will then distribute the files to the correct location.
  */
 
 gulp.task('pull:webparts', function(){
@@ -522,7 +554,13 @@ gulp.task('pull:webparts', function(){
 /**
  * Gulp's Pull css task.
  *
- * This section is in beta.
+ * - Pulls style files from the Branding folder 
+ *   on the sharepoint site.  This includes the 
+ *   .css and .scss files for the entire site 
+ *   (webparts, main theme styles, all styles)
+ *   
+ * - Downloads all files into a temp folder, the promise
+ *   will then distribute the files to the correct location.
  */
 
 gulp.task('pull:css', function(){
@@ -564,10 +602,17 @@ gulp.task('pull:css', function(){
 
 
 
+
 /**
  * Gulp's Pull JS task.
  *
- * - This section is in beta.
+ * - Pulls JavaScript files from the Branding folder
+ *   on the sharepoint site.  This includes .js files
+ *   that are loaded in the masterpage and all .ts files 
+ *   for the entire site (including .ts files for webparts)
+ *
+ * - Downloads all files into a temp folder, the promise
+ *   will then distribute the files to the correct location.
  */
 
 gulp.task('pull:js', function(){
@@ -608,10 +653,37 @@ gulp.task('pull:js', function(){
 
 
 
+
+/**
+ * Gulp's Pull 
+ *
+ * - This section is still in beta.
+ *
+ * - Pulls json files that contain a list of project dependencies.
+ */
+
+gulp.task('pull:config', function(){
+
+    sppull(spPullCreds, {
+        spRootFolder: sp.dir.branding + '/config',
+        dlRootFolder: './',
+        strictObjects: [
+            '/package.json',
+            '/bower.json',
+            '/typings.json'
+        ]
+    })
+    .then(onPullComplete)
+    .catch(onPullError)
+});
+
+
+
+
 /**
  * Gulp's Pull libraries task.
  *
- * - This section is still in beta.
+ * - Pulls all 3rd party libraries being used by the sharepoint site.
  */
 
 gulp.task('pull:libraries', function(){
@@ -629,7 +701,7 @@ gulp.task('pull:libraries', function(){
 /**
  * Gulp's Pull images task.
  *
- * - This section is still in beta.
+ * - Pulls all image files from the Branding folder.
  */
 
 gulp.task('pull:images', function(){
@@ -647,7 +719,7 @@ gulp.task('pull:images', function(){
 /**
  * Gulp's Pull fonts task.
  *
- * - This section is still in beta.
+ * - Pulls all font files from the Branding folder.
  */
 
 gulp.task('pull:fonts', function(){
@@ -659,30 +731,3 @@ gulp.task('pull:fonts', function(){
     .then(onPullComplete)
     .catch(onPullError)
 });
-
-
-
-/**
- * Gulp's Pull 
- *
- * - This section is still in beta.
- */
-
-gulp.task('pull:config', function(){
-
-    // TODO: Pull config files down from the sharepoint site.
-});
-
-
-
-
-function onPullComplete(files){
-    // Tells the user which files have been downloaded, and where they have been saved:
-    for (var i = 0, l = files.length; i < l; i++){
-        console.log(files[i].ServerRelativeUrl.green + ' has been downloaded into ' + files[i].SavedToLocalPath.green);
-    }
-}
-
-function onPullError(err){
-    console.log(err.red);
-}
