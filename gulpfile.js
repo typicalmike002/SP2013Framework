@@ -1,7 +1,7 @@
 /**
  * gulpfile.js
  *
- * - Handles all build tool tasks.
+ * - Handles all build tool tasks which can be called by the command line.
  */
 
 var gulp          = require('gulp'),
@@ -10,9 +10,9 @@ var gulp          = require('gulp'),
     sppull        = require('sppull').sppull,
     colors        = require('colors'),
     del           = require('del'),
-    onError = function (err){
-        console.log(err);
-        this.emit('end');
+    onError       = function (err){
+                        console.log(err);
+                        this.emit('end');
     };
 
 
@@ -87,22 +87,9 @@ gulp.task('watch', function(){
 
 gulp.task('compile:css', function(){
     return gulp.src('./Build/sass/**/*.scss')
-        
-        // Stylelint scss files:
-        .pipe(postcss([
-                require('stylelint'),
-                require('postcss-reporter')({ clearMessage: true }),
-            ], 
-            { syntax: require('postcss-scss') }
-        ))
 
         // Compiles scss code to pure css:
-        .pipe(compass({
-            config_file: './config.rb',
-            css: 'Branding/css',
-            sass: 'Build/sass',
-            environment: 'development'
-        }))
+        .pipe(sass())
 
         // While still compiling, add cross browser prefixes 
         // and combine all media queries:
@@ -110,7 +97,6 @@ gulp.task('compile:css', function(){
             require('autoprefixer')({ browsers: ['last 2 versions'] }),
             require('css-mqpacker')
         ]))
-
 
         // Saves an unminified copy of the results:
         .pipe(gulp.dest('./Branding/css'))
@@ -135,26 +121,11 @@ gulp.task('compile:css', function(){
 /**
  * Gulp's compile js task.
  *
- * - Lints all TypeScript Files before running Webpack.
- *
  * - See the ./webpack.config.js file to view JavaScript Compiling options. 
  */
 
 gulp.task('compile:js', function(){
     return gulp.src('./Build/ts/**/*.ts')
-
-        // Lint TypeScript:
-        .pipe(tslint())
-
-        // Prints tslint results to the console:
-        .pipe(tslint.report('verbose'), {
-            emitError: false
-        })
-
-        // This empty function allows gulp to continue the stream
-        // if tslint reports an error.  It is blank because we are 
-        // using tslint.report() above this message to log the errors:
-        .on('error', function(){})
 
         // Executes the webpack javascript module builder:
         .pipe(webpack(require('./webpack.config.js')))
@@ -295,7 +266,7 @@ gulp.task('push:masterpage', function(){
             username    : sp.username,
             password    : sp.password,
             siteUrl     : sp.siteUrl,
-            folder      : sp.dir.masterpage,
+            folder      : sp.dir.branding,
             flatten     : false
         }))
 });

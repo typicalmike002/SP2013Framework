@@ -6,38 +6,22 @@
  * Params:
  *     - listName(string): Name of the sharepoint document library to query.
  *     - query: The caml query to perform the opperation on.
- *
- * Dependencies: 
- *     - sp.js
  */
 
+'use strict';
+
 export class SPCamlQuery {
-    
+
     private query: string;
     private listName: string;
     private onSuccess: Function;
     private collListItem: any;
     private clientContext: any;
-  
-    constructor(listName: string, query: any){
+
+    constructor(listName: string, query: any) {
         this.listName = listName;
         this.query = query;
     };
-
-
-    /**
-     * Method onFail
-     *
-     * Note:
-     *     - Logs error message if getData fails.
-     */
-
-    private onFail(sender: any, args: any){
-        console.log('The ' + this.listName + ' query failed:\n' + 
-            args.get_message() + '\n' + args.get_stackTrace()
-        );
-    };
-
 
     /**
      * Method: getData
@@ -46,13 +30,9 @@ export class SPCamlQuery {
      *
      * Params: 
      *     - onSuccess: callback function to execute on success.
-     *
-     * Note:
-     *     - SharePoint requires the callback function as well as
-     *       clientContext and collListItem to be referenced by 'this'.
      */
 
-    public getData(onSuccess: Function) {
+    public getData(onSuccess: Function): void {
 
         // Attaches the callback function to the class:
         this.onSuccess = onSuccess;
@@ -67,12 +47,22 @@ export class SPCamlQuery {
         let spCamlQuery: any = new SP.CamlQuery();
         spCamlQuery.set_viewXml(this.query);
         this.collListItem = oList.getItems(spCamlQuery);
-        
+
         // Executes the query and triggers callback functions:
         this.clientContext.load(this.collListItem);
         this.clientContext.executeQueryAsync(
             Function.createDelegate(this, this.onSuccess),
             Function.createDelegate(this, this.onFail)
+        );
+    };
+
+    /**
+     * Private Method onFail
+     */
+
+    private onFail(sender: any, args: any): void {
+        console.log('The ' + this.listName + ' query failed:\n' +
+            args.get_message() + '\n' + args.get_stackTrace()
         );
     };
 };
@@ -99,7 +89,7 @@ export class SPajaxQuery {
     private listName: string;
     private query: string;
 
-    constructor(listName: string, query: string){
+    constructor(listName: string, query: string) {
         this.listName = listName;
         this.query = query;
     };
@@ -112,24 +102,29 @@ export class SPajaxQuery {
      * - onSuccess: Function to return if ajax returns successfully.
      */
 
-    public getData(onSuccess: Function){
+    public getData(onSuccess: Function): void {
 
         // Prepares url string for ajax:
-        const restUrl: string = _spPageContextInfo.webAbsoluteUrl + "/_api/web/lists/getByTitle('" + this.listName + "')/items" + "?" + this.query;
+        const restUrl: string = _spPageContextInfo.webAbsoluteUrl
+            + "/_api/web/lists/getByTitle('"
+            + this.listName
+            + "')/items"
+            + "?"
+            + this.query;
 
         jQuery.ajax({
             url: restUrl,
             type: 'GET',
-            headers: { 
+            headers: {
                 "accept": "application/json;odata=verbose",
-                "X-RequestDigest": jQuery('#__REQUESTDIGEST').val()
+                "X-RequestDigest": jQuery('#__REQUESTDIGEST').val(),
             },
-            success: function(data){
+            success: (data: Object): void => {
                 onSuccess(data);
             },
-            error: function(error){
-                console.log('The SPajaxQuery on: ' + this.listName + ' list failed:\n' + error);
-            }
+            error: (error: Object): void => {
+                console.log('The SPajaxQuery on: ' + (() => this.listName) + ' list failed:\n' + error);
+            },
         });
     };
 };
@@ -143,7 +138,6 @@ export class SPajaxQuery {
  * SPServicesJsonQuery(listName, {...settings})
  *
  * Params:
- *
  *    - listName: String containing the list name to perform a query on.
  *
  *    - settings: Object containing a list of settings:
@@ -157,8 +151,8 @@ export class SPajaxQuery {
 export class SPServicesJsonQuery {
 
     private settings: Object;
-    
-    constructor(settings: Object){
+
+    constructor(settings: Object) {
         this.settings = settings;
     }
 
@@ -168,14 +162,13 @@ export class SPServicesJsonQuery {
      * - onSuccess: Function to execute after query is successful.
      */
 
-    public getData(onSuccess: Function){
+    public getData(onSuccess: Function): void {
 
         let requestData: any = jQuery().SPServices.SPGetListItemsJson(this.settings);
 
-        // Attaches the callback function to execute if query is successfull:
-        jQuery.when(requestData).done(function(){
+        jQuery.when(requestData).done(function(): void {
             onSuccess(this.data);
-        }).fail(function(errorThrown){
+        }).fail(function(errorThrown: Object): void {
             console.log('The SPServicesJsonQuery on: ' + this.listName + ' list failed.\n' + errorThrown);
         });
     }
